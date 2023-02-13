@@ -11,7 +11,7 @@
   </head>
   <body class="bg-gray-100 h-screen">
     <div class="flex h-full justify-center items-center">
-      <form action="#" class="w-full max-w-lg">
+      <form method="post" action="/process" class="w-full max-w-lg">
         <h1 class="text-3xl font-medium mb-6 text-center">
           Video Processing API
         </h1>
@@ -58,5 +58,31 @@
         </div>
       </form>
     </div>
+
+    <script>
+      const form = document.querySelector("form");
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const video = document.getElementById("video").files[0];
+        const audio = document.getElementById("audio").files[0];
+        const time = document.getElementById("time").value;
+
+        const formData = new FormData();
+        formData.append("video", video);
+        formData.append("audio", audio);
+        formData.append("time", time);
+
+        fetch("/process", {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.text())
+          .then((result) => {
+            console.log(result);
+          });
+      });
+    </script>
   </body>
 </html>
