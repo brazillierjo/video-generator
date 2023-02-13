@@ -4,6 +4,7 @@ const multer = require("multer");
 const path = require("path");
 const bodyParser = require("body-parser");
 const ffmpeg = require("fluent-ffmpeg");
+const cors = require("cors");
 
 // Set up Multer for handling file uploads
 const storage = multer.diskStorage({
@@ -23,8 +24,35 @@ const upload = multer({ storage: storage });
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+app.use(cors());
+
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
+
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
+
+// Route for the home page
+app.get("/", (req, res) => {
+  res.send("Hello World!");
+});
+
 // Route for handling file uploads
 app.post("/process", upload.array("files", 2), (req, res) => {
+  console.log(req.files);
+
   const videoFile = req.files[0];
   const audioFile = req.files[1];
   const time = req.body.time;
