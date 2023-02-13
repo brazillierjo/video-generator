@@ -38,7 +38,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.post("/process", upload.array("files"), (req, res) => {
+app.post("/process", upload.any("files"), (req, res) => {
   const video = req.files[0].path;
   const audio = req.files[1].path;
   const time = req.body.time;
