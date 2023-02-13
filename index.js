@@ -26,69 +26,42 @@ app.use(bodyParser.json());
 
 app.use(cors());
 
+app.use(express.static(path.join(__dirname, "public")));
+
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, PATCH, DELETE"
   );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   next();
 });
 
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-  next();
-});
-
-// Route for the home page
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
-
-// Route for handling file uploads
-app.post("/process", upload.array("files", 2), (req, res) => {
-  console.log(req.files);
-
-  const videoFile = req.files[0];
-  const audioFile = req.files[1];
+app.post("/process", upload.array("files"), (req, res) => {
+  const video = req.files[0].path;
+  const audio = req.files[1].path;
   const time = req.body.time;
 
-  // Paths of the input files
-  const videoFilePath = path.join(__dirname, "uploads", videoFile.filename);
-  const audioFilePath = path.join(__dirname, "uploads", audioFile.filename);
-
-  // Path of the output file
-  const outputFilePath = path.join(__dirname, "uploads", "output.mp4");
-
-  // Use FFmpeg to process the video and audio files
-  ffmpeg()
-    .input(videoFilePath)
-    .input(audioFilePath)
-    .complexFilter([
-      {
-        filter: "amix",
-        options: { inputs: 2, duration: "longest" },
-      },
-    ])
-    .outputOptions("-c:v libx264", "-c:a aac", "-b:a 192k")
-    .output(outputFilePath)
-    .on("end", function () {
-      console.log("File processing finished!");
-      res.send("Video processed successfully!");
+  const command = ffmpeg()
+    .input(video)
+    .input(audio)
+    .outputOptions(`-t ${time}`)
+    .output("output.mp4")
+    .on("progress", function (progress) {
+      console.log("Processing: " + progress.percent + "% done");
     })
-    .on("error", function (err) {
-      console.error("An error occurred: " + err.message);
-      res.status(500).send("An error occurred while processing the video.");
+    .on("end", function () {
+      console.log("Finished processing");
+      res.send("/output.mp4");
     })
     .run();
 });
 
-// Start the Express server
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+app.get("/test", (req, res) => {
+  res.status(200).send("API is working");
+});
+
+app.listen(8000, () => {
+  console.log("Server is listening on port 8000");
 });
